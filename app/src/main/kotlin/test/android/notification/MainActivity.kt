@@ -124,7 +124,10 @@ internal class MainActivity : AppCompatActivity() {
                     val now = System.currentTimeMillis().milliseconds
                     val d = now - start
                     if (d > time) break
-                    textView.text = (time - d).toDouble(DurationUnit.SECONDS).toString()
+                    val result = (time - d).toDouble(DurationUnit.SECONDS)
+                    textView.post {
+                        textView.text = result.toString()
+                    }
                     delay(250.milliseconds)
                 }
             }
