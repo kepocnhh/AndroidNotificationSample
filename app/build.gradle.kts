@@ -18,8 +18,8 @@ android {
         applicationId = appId
         minSdk = Version.Android.minSdk
         targetSdk = Version.Android.targetSdk
-        versionName = "0.0.1"
-        versionCode = 1
+        versionCode = 2
+        versionName = "0.0.$versionCode"
         manifestPlaceholders["appName"] = "@string/app_name"
     }
 
@@ -56,4 +56,5 @@ androidComponents.onVariants { variant ->
 
 dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.0")
 }

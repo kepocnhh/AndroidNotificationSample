@@ -14,11 +14,23 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.absoluteValue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 
 internal class MainActivity : AppCompatActivity() {
+    private var textView: TextView? = null
+    private var requestButton: TextView? = null
+
     private fun showNotification() {
         showToast("show notification")
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -40,8 +52,8 @@ internal class MainActivity : AppCompatActivity() {
         )
         val actionCancel = buildNotificationAction(
             title = "cancel",
-            pendingIntent(
-                intent = Intent(this, MainActivity::class.java).also {
+            pendingIntentService(
+                intent = Intent(this, TestService::class.java).also {
                     it.action = "kill_notification"
                     it.putExtra("nId", notificationId.toString())
                 },
@@ -77,7 +89,7 @@ internal class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    private fun onClick() {
+    private fun onRequest() {
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         if (powerManager.isInteractive) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -100,20 +112,32 @@ internal class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val intent = intent
-        if (intent != null && intent.extras != null) {
-            when (intent.action) {
-                "kill_notification" -> {
-                    val notificationId = intent.getStringExtra("nId")?.toIntOrNull() ?: return
-                    val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                    notificationManager.cancel(notificationId)
+    private fun onClick() {
+        lifecycleScope.launch {
+            val textView = checkNotNull(textView)
+            val requestButton = checkNotNull(requestButton)
+            requestButton.isEnabled = false
+            withContext(Dispatchers.Default) {
+                val time = 5.seconds
+                val start = System.currentTimeMillis().milliseconds
+                while (true) {
+                    val now = System.currentTimeMillis().milliseconds
+                    val d = now - start
+                    if (d > time) break
+                    textView.text = (time - d).toDouble(DurationUnit.SECONDS).toString()
+                    delay(250.milliseconds)
                 }
             }
+            onRequest()
+            requestButton.isEnabled = true
+            textView.text = ""
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         val root = FrameLayout(this)
-        val buttons = LinearLayout(this).also {
+        val rows = LinearLayout(this).also {
             it.layoutParams = FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -121,6 +145,18 @@ internal class MainActivity : AppCompatActivity() {
             )
             it.orientation = LinearLayout.VERTICAL
             root.addView(it)
+        }
+        TextView(this).also {
+            it.layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
+            it.text = "..."
+            it.setOnClickListener {
+                onClick()
+            }
+            textView = it
+            rows.addView(it)
         }
         Button(this).also {
             it.layoutParams = LinearLayout.LayoutParams(
@@ -131,7 +167,8 @@ internal class MainActivity : AppCompatActivity() {
             it.setOnClickListener {
                 onClick()
             }
-            buttons.addView(it)
+            requestButton = it
+            rows.addView(it)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val permission = Manifest.permission.POST_NOTIFICATIONS
@@ -145,7 +182,7 @@ internal class MainActivity : AppCompatActivity() {
                     it.setOnClickListener {
                         requestPermissions(arrayOf(permission), 0)
                     }
-                    buttons.addView(it)
+                    rows.addView(it)
                 }
             }
         }

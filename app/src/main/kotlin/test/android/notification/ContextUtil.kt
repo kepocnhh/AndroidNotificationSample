@@ -16,3 +16,11 @@ internal fun Context.pendingIntent(
 ): PendingIntent {
     return PendingIntent.getActivity(this, requestCode, intent, flags or PendingIntent.FLAG_IMMUTABLE)
 }
+
+internal fun Context.pendingIntentService(
+    requestCode: Int = 0,
+    intent: Intent,
+    flags: Int,
+): PendingIntent {
+    return PendingIntent.getService(this, requestCode, intent, flags or PendingIntent.FLAG_IMMUTABLE)
+}

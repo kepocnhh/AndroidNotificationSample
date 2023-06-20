@@ -15,5 +15,8 @@
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
             android:exported="true"/>
+
+        <service android:name=".TestService"
+            android:exported="false"/>
     </application>
 </manifest>
