@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application
         android:theme="@style/App.Theme"
         android:label="${appName}_${buildType}">
@@ -9,5 +11,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".TestActivity"
+            android:excludeFromRecents="true"
+            android:screenOrientation="portrait"
+            android:exported="true"/>
     </application>
 </manifest>
